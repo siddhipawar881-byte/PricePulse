@@ -387,14 +387,13 @@
         }
 
         // Display products
+        // Display products
         function displayProducts(products) {
 
             const resultsContainer =
                 document.getElementById("searchResults");
 
-
             resultsContainer.innerHTML = "";
-
 
             products.forEach(product => {
 
@@ -403,55 +402,96 @@
 
                 card.className = "product-card";
 
-
+                // Product price
                 const price =
-                    product.price !== null
+                    product.price !== null &&
+                        product.price !== undefined
                         ? `₹${Number(product.price).toLocaleString("en-IN")}`
                         : "Price unavailable";
 
-
+                // Product rating
                 const rating =
-                    product.rating !== null
+                    product.rating !== null &&
+                        product.rating !== undefined
                         ? `⭐ ${product.rating}`
-                        : "Rating unavailable";
+                        : "No rating";
 
+                // Rating count
+                const ratingCount =
+                    product.ratingCount !== null &&
+                        product.ratingCount !== undefined
+                        ? `(${Number(product.ratingCount).toLocaleString("en-IN")})`
+                        : "";
+
+                // Stock status
+                const stockStatus =
+                    product.inStock === true
+                        ? "In Stock"
+                        : "Currently unavailable";
+
+                // Stock class
+                const stockClass =
+                    product.inStock === true
+                        ? "in-stock"
+                        : "out-of-stock";
 
                 card.innerHTML = `
 
-            <img
-                src="${product.image}"
-                alt="${product.name}"
-            >
+            <div class="product-image-container">
 
-            <h2>
-                ${product.name}
-            </h2>
+                <img
+                    src="${product.image || ""}"
+                    alt="${product.name || "Product"}"
+                    class="product-image"
+                >
 
-            <p>
-                ${rating}
-            </p>
-
-            <div class="product-price">
-                ${price}
             </div>
 
             <div class="product-retailer">
                 ${product.source}
             </div>
 
-            <button
-                onclick="viewProduct('${product.productUrl}')"
-            >
-                View Product
-            </button>
+            <h2 class="product-name">
+                ${product.name || "Product name unavailable"}
+            </h2>
+
+            <div class="product-rating">
+                ${rating}
+                <span class="rating-count">
+                    ${ratingCount}
+                </span>
+            </div>
+
+            <div class="product-price">
+                ${price}
+            </div>
+
+            <div class="product-stock ${stockClass}">
+                ${stockStatus}
+            </div>
+
+            <div class="product-actions">
+
+                <button
+                    class="compare-product-btn"
+                    onclick="compareProduct('${product.sourceProductId}', '${product.source}')"
+                >
+                    Compare Prices
+                </button>
+
+                <button
+                    class="view-product-btn"
+                    onclick="viewProduct('${product.productUrl}')"
+                >
+                    View Product
+                </button>
+
+            </div>
 
         `;
 
-
                 resultsContainer.appendChild(card);
-
             });
-
         }
 
 
@@ -460,6 +500,11 @@
             window.open(url, "_blank");
         }
 
+        function compareProduct(productId, source) {
+
+            console.log("Compare product:", productId, source);
+
+        }
 
         // Temporary sample products
         function showSampleResults(query) {
