@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PricePulse - Smart Price Intelligence Platform</title>
+    <link rel="stylesheet" href="style.css">
+    <script>
+        function toggleMenu() {
+            document.getElementById("menuPanel").classList.toggle("show");
+        }
+        function toggleCategories() {
+            document.getElementById("categoryMenu").classList.toggle("show");
+        }
+        function searchProduct() {
+            const searchInput = document.getElementById("searchInput");
+            const query = searchInput.value.trim();
+
+            if (query === "") {
+                alert("Please enter a product name.");
+                return;
+            }
+
+            window.location.href =
+                `search-results.html?query=${encodeURIComponent(query)}`;
+        }
+
+        function normalizeOffer(offer) {
+
+            return {
+                source: "Amazon",
+                seller: offer.seller,
+                price: offer.price,
+                condition: offer.condition,
+                shipsFrom: offer.ships_from
+            };
+
+        }
+        async function saveSelectedProduct(product) {
+
+            try {
+
+                // Step 1: Check if this product already exists in PricePulse
+                const findResponse = await fetch(
+                    `http://127.0.0.1:3000/products/find?name=${encodeURIComponent(product.name)}`
+                );
+
+                const findData = await findResponse.json();
+
+                let productId;
+
+                // Step 2: If product already exists, use its ID
+                if (findData.found) {
+
+                    productId = findData.product.id;
+
+                } else {
+
+                    // Step 3: If product doesn't exist, create it
+                    const createResponse = await fetch(
+                        "http://127.0.0.1:3000/products",
+                        {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify({
+                                name: product.name,
+                                category: "Unknown",
+                                description: null,
+                                imageUrl: product.image || null
+                            })
+                        }
+                    );
+
+                    const createData = await createResponse.json();
+
+                    if (!createResponse.ok) {
+                        throw new Error(createData.message);
+                    }
+
+                    productId = createData.productId;
+
+                }
+
+                // Step 4: Check whether this Amazon source is already saved
+                const sourceResponse = await fetch(
+                    `http://127.0.0.1:3000/product-sources/Amazon/${encodeURIComponent(product.sourceProductId)}`
+                );
+
+                const sourceData = await sourceResponse.json();
+
+                // Step 5: Save Amazon source if it doesn't exist
+                if (!sourceData.exists) {
+
+                    const saveSourceResponse = await fetch(
+                        "http://127.0.0.1:3000/product-sources",
+                        {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify({
+                                productId: productId,
+                                source: "Amazon",
+                                sourceProductId: product.sourceProductId,
+                                productUrl: product.productUrl || null
+                            })
+                        }
+                    );
+
+                    if (!saveSourceResponse.ok) {
+                        const errorData = await saveSourceResponse.json();
+                        throw new Error(errorData.message);
+                    }
+
+                }
+
+                console.log("Product saved successfully:", productId);
+
+                return productId;
+
+            } catch (error) {
+
+                console.log("Save Product Error:", error);
+
+                return null;
+
+            }
+        }
+
+        async function saveProductPrice(productId, offer, productUrl) {
+
+            const response = await fetch(
+                "http://127.0.0.1:3000/product-prices",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        productId: productId,
+                        seller: offer.seller,
+                        price: offer.price,
+                        discount: 0,
+                        productUrl: productUrl || null
+                    })
+                }
+            );
+
+            if (!response.ok) {
+
+                const data = await response.json();
+
+                throw new Error(
+                    data.message || "Could not save product price."
+                );
+
+            }
+
+        }
+
+        async function selectProduct(sourceProductId, product) {
+
+            const productId = await saveSelectedProduct(product);
+
+            if (!productId) {
+                console.log("Could not save selected product.");
+                return;
+            }
+            const resultsContainer =
+                document.getElementById("amazonResults");
+
+            resultsContainer.innerHTML =
+                "<p>Loading live seller prices...</p>";
+
+            try {
+
+                const response = await fetch(
+                    `http://127.0.0.1:3000/amazon-offers?asin=${sourceProductId}`
+                );
+
+                if (!response.ok) {
+                    throw new Error("Could not fetch Amazon offers.");
+                }
+
+                const data = await response.json();
+
+                console.log("Amazon Offers:", data);
+                console.log("Pinned:", data.data.pinned);
+                console.log("Offers:", data.data.offers);
+
+                const pinned = normalizeOffer(data.data.pinned);
+                const offers = (data.data.offers || []).map(normalizeOffer);
+
+                console.log("Saving pinned offer:", productId, pinned);
+
+                await saveProductPrice(
+                    productId,
+                    pinned,
+                    product.productUrl
+                );
+
+                for (const offer of offers) {
+
+                    console.log("Saving seller offer:", productId, offer);
+
+                    await saveProductPrice(
+                        productId,
+                        offer,
+                        product.productUrl
+                    );
+
+                }
+
+                let offersHTML = `
+            <div class="amazon-offers-section">
+
+                <button
+                    class="back-to-results"
+                    onclick="searchProduct()">
+                    ← Back to Results
+                </button>
+
+                <h2>Live Prices</h2>
+
+                <div class="amazon-offer-card">
+
+                    <div>
+                        <h3>${pinned.seller}</h3>
+
+                        <p>
+                            ${pinned.condition}
+                        </p>
+
+                        <p>
+                            Ships from: ${pinned.shipsFrom}
+                        </p>
+                    </div>
+
+                    <div class="offer-price">
+                        ₹${Number(pinned.price).toLocaleString("en-IN")}
+                    </div>
+
+                </div>
+        `;
+
+                offers.forEach(offer => {
+
+                    offersHTML += `
+                <div class="amazon-offer-card">
+
+                    <div>
+                        <h3>${offer.seller}</h3>
+
+                        <p>
+                            ${offer.condition}
+                        </p>
+
+                        <p>
+                            Ships from: ${offer.shipsFrom}
+                        </p>
+                    </div>
+
+                    <div class="offer-price">
+                        ₹${Number(offer.price).toLocaleString("en-IN")}
+                    </div>
+
+                </div>
+            `;
+
+                });
+
+                offersHTML += `
+            </div>
+        `;
+
+                resultsContainer.innerHTML = offersHTML;
+
+            } catch (error) {
+
+                console.log("Amazon Offers Error:", error);
+
+                resultsContainer.innerHTML =
+                    "<p>Could not load seller prices.</p>";
+            }
+        }
+
+        function logout() {
+            fetch("http://127.0.0.1:3000/logout", {
+                method: "POST",
+                credentials: "include"
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);
+
+                    if (data.message === "Logged out successfully!") {
+                        window.location.href = "home.html";
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(error => {
+                    console.log("Logout error:", error);
+                    alert("Logout failed. Please try again.");
+                });
+        }
+
+        function handleAuth() {
+            fetch("http://127.0.0.1:3000/check-session", {
+                credentials: "include"
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log("Session:", data);
+
+                    if (data.loggedIn) {
+                        logout();
+                    } else {
+                        window.location.href = "login.html";
+                    }
+                })
+                .catch(error => {
+                    console.log("Auth error:", error);
+                    alert("Unable to check login status.");
+                });
+        }
+
+        function updateAuthButton() {
+            fetch("http://127.0.0.1:3000/check-session", {
+                credentials: "include"
+            })
+                .then(response => response.json())
+                .then(data => {
+                    let authButton = document.getElementById("authButton");
+
+                    if (data.loggedIn) {
+                        authButton.textContent = "Logout";
+                    } else {
+                        authButton.textContent = "Login";
+                    }
+                })
+                .catch(error => {
+                    console.log("Session check error:", error);
+                });
+        }
+
+    </script>
+</head>
+
+<body>
+    <header class="header">
+        <nav class="navbar">
+            <div class="logo">Price<span>Pulse</span></div>
+
+            <div class="nav-right">
+                <button class="menu-btn" onclick="toggleMenu()">
+                    ☰
+                </button>
+
+                <button class="login-btn" id="authButton" onclick="handleAuth()">
+                    Login
+                </button>
+
+            </div>
+        </nav>
+
+        <!-- Navigation Menu -->
+        <div class="menu-panel" id="menuPanel">
+            <a href="home.html">Home</a>
+            <a href="products.html">Products</a>
+            <div class="dropdown">
+                <button class="dropdown-btn" onclick="toggleCategories()">
+                    Categories ▾
+                </button>
+
+                <div class="category-menu" id="categoryMenu">
+                    <a href="#">Mobiles</a>
+                    <a href="#">Laptops</a>
+                    <a href="#">Headphones</a>
+                    <a href="#">Cameras</a>
+                    <a href="#">Smartwatches</a>
+                    <a href="#">Home Appliances</a>
+                </div>
+            </div>
+            <a href="#">Compare</a>
+            <a href="#">Watchlist</a>
+            <a href="#">Analytics</a>
+        </div>
+    </header>
+    <main>
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-content">
+                <p class="hero-tag">SMART PRICE INTELLIGENCE</p>
+                <h1>
+                    Find the right price.<br>
+                    <span>Buy at the right time.</span>
+                </h1>
+                <p class="hero-description">
+                    Compare prices, track price changes, and discover
+                    whether you're really getting a good deal.
+                </p>
+                <!-- Search Bar -->
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Search for a product...">
+                    <button onclick="searchProduct()">
+                        Search
+                    </button>
+                </div>
+                <div id="amazonResults" class="amazon-results"></div>
+            </div>
+        </section>
+
+        <!-- Popular Categories Section -->
+        <section class="categories-section">
+            <div class="section-heading">
+                <p class="section-tag">EXPLORE PRODUCTS</p>
+                <h2>Popular Categories</h2>
+                <p>Find the products you're looking for and compare their prices.</p>
+            </div>
+            <div class="categories-container">
+                <!-- Mobile -->
+                <div class="category-card">
+                    <div class="category-icon">📱</div>
+                    <h3>Mobiles</h3>
+                    <p>Compare smartphone prices</p>
+                </div>
+                <!-- Laptop -->
+                <div class="category-card">
+                    <div class="category-icon">💻</div>
+                    <h3>Laptops</h3>
+                    <p>Find the best laptop deals</p>
+                </div>
+                <!-- Headphones -->
+                <div class="category-card">
+                    <div class="category-icon">🎧</div>
+                    <h3>Headphones</h3>
+                    <p>Compare audio products</p>
+                </div>
+                <!-- Cameras -->
+                <div class="category-card">
+                    <div class="category-icon">📷</div>
+                    <h3>Cameras</h3>
+                    <p>Track camera prices</p>
+                </div>
+                <!-- Smartwatches -->
+                <div class="category-card">
+                    <div class="category-icon">⌚</div>
+                    <h3>Smartwatches</h3>
+                    <p>Discover smartwatch deals</p>
+                </div>
+                <!-- Home Appliances -->
+                <div class="category-card">
+                    <div class="category-icon">🏠</div>
+                    <h3>Home Appliances</h3>
+                    <p>Compare appliance prices</p>
+                </div>
+            </div>
+        </section>
+        <!-- How PricePulse Works Section -->
+        <section class="how-section">
+            <div class="section-heading">
+                <p class="section-tag">HOW IT WORKS</p>
+                <h2>How PricePulse Works</h2>
+                <p>
+                    Make smarter buying decisions with simple price intelligence.
+                </p>
+            </div>
+            <div class="steps-container">
+                <!-- Step 1 -->
+                <div class="step-card">
+                    <div class="step-number">01</div>
+                    <div class="step-icon">🔍</div>
+                    <h3>Search a Product</h3>
+                    <p>
+                        Search for the product you want to buy.
+                    </p>
+                </div>
+                <!-- Step 2 -->
+                <div class="step-card">
+                    <div class="step-number">02</div>
+                    <div class="step-icon">⚖️</div>
+                    <h3>Compare Prices</h3>
+                    <p>
+                        Compare prices from different sellers in one place.
+                    </p>
+                </div>
+                <!-- Step 3 -->
+                <div class="step-card">
+
+                    <div class="step-number">03</div>
+
+                    <div class="step-icon">📈</div>
+                    <h3>Track Price Trends</h3>
+                    <p>
+                        Check how the product price has changed over time.
+                    </p>
+                </div>
+                <!-- Step 4 -->
+                <div class="step-card">
+                    <div class="step-number">04</div>
+                    <div class="step-icon">💡</div>
+                    <h3>Make a Smart Decision</h3>
+                    <p>
+                        Decide whether to buy now or wait for a better price.
+                    </p>
+                </div>
+            </div>
+        </section>
+    </main>
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <!-- Brand -->
+            <div class="footer-brand">
+                <div class="footer-logo">
+                    Price<span>Pulse</span>
+                </div>
+                <p>
+                    Smart price intelligence for smarter buying decisions.
+                </p>
+            </div>
+            <!-- Quick Links -->
+            <div class="footer-links">
+                <h3>Quick Links</h3>
+                <a href="#">Home</a>
+                <a href="#">Products</a>
+                <a href="#">Compare</a>
+                <a href="#">Watchlist</a>
+            </div>
+
+
+            <!-- Categories -->
+            <div class="footer-links">
+                <h3>Categories</h3>
+
+                <a href="#">Mobiles</a>
+                <a href="#">Laptops</a>
+                <a href="#">Headphones</a>
+                <a href="#">Cameras</a>
+            </div>
+            <!-- About -->
+            <div class="footer-links">
+                <h3>PricePulse</h3>
+                <a href="#">About Us</a>
+                <a href="#">How It Works</a>
+                <a href="#">Contact</a>
+                <a href="#">Privacy Policy</a>
+            </div>
+        </div>
+        <!-- Bottom Footer -->
+        <div class="footer-bottom">
+            <p>
+                © 2026 PricePulse. All rights reserved.
+            </p>
+            <p>
+                Built for smarter shopping.
+            </p>
+        </div>
+    </footer>
+    <script>
+        updateAuthButton();
+
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Compare Products | PricePulse</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- Navbar -->
+
+    <nav class="navbar">
+
+        <div class="logo">
+            PricePulse
+        </div>
+
+        <div class="nav-links">
+            <a href="home.html">Home</a>
+            <a href="products.html">Products</a>
+            <a href="compare.html">Compare</a>
+        </div>
+    </nav>
+    <!-- Compare Section -->
+    <section class="compare-section">
+        <h1>Compare Products</h1>
+        <div id="selectedProduct" class="compare-product">
+            <p>Loading product...</p>
+        </div>
+        <h2 class="seller-heading">
+            Compare Prices Across Sellers
+        </h2>
+        <div id="sellerPrices" class="seller-prices">
+            <p>Loading seller prices...</p>
+        </div>
+        <div id="savingsMessage" class="savings-message"></div>
+    </section>
+    <script>
+
+        // Get product ID from URL
+
+        const urlParams = new URLSearchParams(window.location.search);
+
+        const productId = urlParams.get("id");
+
+
+        if (productId) {
+
+            fetch("http://127.0.0.1:3000/products/" + productId)
+
+                .then(response => {
+
+                    if (!response.ok) {
+                        throw new Error("Product not found");
+                    }
+
+                    return response.json();
+
+                })
+
+                .then(product => {
+
+                    console.log(product);
+
+                    document.getElementById("selectedProduct").innerHTML = `
+
+                <div class="compare-product-image">
+
+                    <img src="${product.image_url}" alt="${product.name}">
+
+                </div>
+
+
+                <div class="compare-product-info">
+
+                    <p class="product-category">
+                        ${product.category}
+                    </p>
+
+                    <h2>
+                        ${product.name}
+                    </h2>
+
+                    <p class="product-description">
+                        ${product.description}
+                    </p>
+
+                    <p class="product-price">
+                        ₹${Number(product.price).toLocaleString("en-IN")}
+                    </p>
+
+                    <p class="product-seller">
+                        Seller: ${product.seller}
+                    </p>
+
+                    <span class="discount">
+                        ${product.discount}% OFF
+                    </span>
+
+                </div>
+
+            `;
+
+                })
+
+                .catch(error => {
+
+                    console.log("Error:", error);
+
+                    document.getElementById("selectedProduct").textContent =
+                        "Product not found.";
+
+                });
+            if (productId) {
+
+                fetch("http://127.0.0.1:3000/products/" + productId + "/prices")
+
+                    .then(response => {
+
+                        if (!response.ok) {
+                            throw new Error("Could not fetch seller prices");
+                        }
+
+                        return response.json();
+
+                    })
+
+                    .then(prices => {
+
+                        console.log(prices);
+
+                        const sellerPrices =
+                            document.getElementById("sellerPrices");
+
+                        sellerPrices.innerHTML = "";
+                        if (prices.length >= 2) {
+
+                            const cheapestPrice = Number(prices[0].price);
+
+                            const mostExpensivePrice =
+                                Number(prices[prices.length - 1].price);
+
+                            const savings =
+                                mostExpensivePrice - cheapestPrice;
+
+                            document.getElementById("savingsMessage").innerHTML = `
+
+        <h3>
+            💰 You can save ₹${savings.toLocaleString("en-IN")}
+        </h3>
+
+        <p>
+            by choosing ${prices[0].seller} instead of
+            ${prices[prices.length - 1].seller}.
+        </p>
+
+    `;
+
+                        }
+
+                        prices.forEach((price, index) => {
+
+    const isBestPrice = index === 0;
+
+    console.log(price.seller, price.product_url);
+
+    const sellerCard = `
+
+    <div class="seller-card ${isBestPrice ? "best-price" : ""}">
+
+        <div>
+
+            <h3>${price.seller}</h3>
+
+            <p>
+                ${price.discount}% OFF
+            </p>
+
+        </div>
+
+        <div>
+
+            <p class="seller-price">
+                ₹${Number(price.price).toLocaleString("en-IN")}
+            </p>
+
+            ${isBestPrice ? `
+                <span class="best-price-badge">
+                    🥇 Best Price
+                </span>
+            ` : ""}
+
+            <a href="${price.product_url}"
+               target="_blank"
+               class="buy-now-button">
+                Buy Now →
+            </a>
+
+        </div>
+
+    </div>
+
+`;
+
+                            sellerPrices.innerHTML += sellerCard;
+
+                        });
+
+                    })
+
+                    .catch(error => {
+
+                        console.log("Error:", error);
+
+                        document.getElementById("sellerPrices").innerHTML =
+                            "<p>Could not load seller prices.</p>";
+
+                    });
+
+            }
+
+        } else {
+
+            document.getElementById("selectedProduct").textContent =
+                "No product selected.";
+
+        }
+    </script>
+
+</body>
+
+</html>

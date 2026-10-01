@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>PricePulse - Analytics</title>
+
+    <link rel="stylesheet" href="analytics.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+
+        <div class="logo">
+            PricePulse
+        </div>
+
+        <div class="nav-links">
+            <a href="home.html">Home</a>
+            <a href="products.html">Products</a>
+            <a href="compare.html">Compare</a>
+            <a href="analytics.html" class="active">Analytics</a>
+        </div>
+
+        <button class="auth-button" onclick="window.location.href='login.html'">
+            Login
+        </button>
+
+    </nav>
+
+
+    <!-- Analytics Header -->
+    <section class="analytics-header">
+
+        <p class="small-heading">PRICE INTELLIGENCE</p>
+
+        <h1>PricePulse Analytics</h1>
+
+        <p>
+            Explore product prices, category performance and the best
+            deals available across sellers.
+        </p>
+
+    </section>
+
+
+    <!-- KPI Cards -->
+    <section class="kpi-section">
+
+        <div class="kpi-card">
+
+            <div class="kpi-icon">₹</div>
+
+            <div>
+                <p class="kpi-label">Lowest Price</p>
+                <h2 id="lowestPrice">₹0</h2>
+            </div>
+
+        </div>
+
+
+        <div class="kpi-card">
+
+            <div class="kpi-icon">📊</div>
+
+            <div>
+                <p class="kpi-label">Average Price</p>
+                <h2 id="averagePrice">₹0</h2>
+            </div>
+
+        </div>
+
+
+        <div class="kpi-card">
+
+            <div class="kpi-icon">🏷️</div>
+
+            <div>
+                <p class="kpi-label">Highest Discount</p>
+                <h2 id="highestDiscount">0%</h2>
+            </div>
+
+        </div>
+
+
+        <div class="kpi-card">
+
+            <div class="kpi-icon">📦</div>
+
+            <div>
+                <p class="kpi-label">Total Products</p>
+                <h2 id="totalProducts">0</h2>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- Category Analytics -->
+    <section class="analytics-grid">
+
+        <div class="analytics-card category-card">
+
+            <div class="section-title">
+
+                <div>
+                    <p class="small-heading">CATEGORY ANALYSIS</p>
+                    <h2>Average Price by Category</h2>
+                </div>
+
+            </div>
+
+            <div class="chart-container">
+
+                <canvas id="categoryChart"></canvas>
+
+            </div>
+
+        </div>
+
+
+        <!-- Best Deals -->
+        <div class="analytics-card deals-card">
+
+            <div class="section-title">
+
+                <div>
+                    <p class="small-heading">TOP DEALS</p>
+                    <h2>Best Deals</h2>
+                </div>
+
+            </div>
+
+            <div id="dealsContainer">
+
+                <p class="loading-message">
+                    Deals will appear here.
+                </p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- Product Analytics -->
+    <section class="analytics-card product-analytics-card">
+
+        <div class="section-title">
+
+            <div>
+                <p class="small-heading">PRODUCT ANALYSIS</p>
+                <h2>Price Comparison Insights</h2>
+            </div>
+
+        </div>
+
+        <div id="productAnalytics">
+
+            <p class="loading-message">
+                Product analytics will appear here.
+            </p>
+
+        </div>
+
+    </section>
+
+
+    <script>
+
+        fetch("http://127.0.0.1:3000/analytics/overview")
+            .then(response => response.json())
+            .then(data => {
+
+                document.getElementById("lowestPrice").textContent =
+                    "₹" + Number(data.lowestPrice).toLocaleString("en-IN");
+
+                document.getElementById("averagePrice").textContent =
+                    "₹" + Number(data.averagePrice).toLocaleString("en-IN");
+
+                document.getElementById("highestDiscount").textContent =
+                    Number(data.highestDiscount) + "%";
+
+                document.getElementById("totalProducts").textContent =
+                    data.totalProducts;
+
+            })
+            .catch(error => {
+
+                console.log("Analytics error:", error);
+
+            });
+
+        fetch("http://127.0.0.1:3000/analytics/categories")
+            .then(response => response.json())
+            .then(data => {
+
+                const categories = data.map(item => item.category);
+                const averagePrices = data.map(item => Number(item.averagePrice));
+
+                new Chart(document.getElementById("categoryChart"), {
+
+                    type: "bar",
+
+                    data: {
+                        labels: categories,
+
+                        datasets: [{
+                            label: "Average Price",
+                            data: averagePrices
+                        }]
+                    },
+
+                    options: {
+                        responsive: true,
+
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+
+                });
+
+            })
+            .catch(error => {
+
+                console.log("Category analytics error:", error);
+
+            });
+
+        fetch("http://127.0.0.1:3000/analytics/deals")
+            .then(response => response.json())
+            .then(data => {
+
+                const dealsContainer = document.getElementById("dealsContainer");
+
+                dealsContainer.innerHTML = "";
+
+                data.slice(0, 5).forEach(deal => {
+
+                    const dealItem = document.createElement("div");
+
+                    dealItem.className = "deal-item";
+
+                    dealItem.innerHTML = `
+                <p class="deal-name">${deal.name}</p>
+
+                <div class="deal-details">
+
+                    <div>
+                        <span class="deal-seller">
+                            ${deal.seller}
+                        </span>
+
+                        <span class="deal-price">
+                            ₹${Number(deal.price).toLocaleString("en-IN")}
+                        </span>
+                    </div>
+
+                    <span class="deal-discount">
+                        ${Number(deal.discount)}% OFF
+                    </span>
+
+                </div>
+            `;
+
+                    dealsContainer.appendChild(dealItem);
+
+                });
+
+            })
+            .catch(error => {
+
+                console.log("Best deals error:", error);
+
+            });
+
+        fetch("http://127.0.0.1:3000/analytics/products")
+            .then(response => response.json())
+            .then(data => {
+
+                const productAnalytics =
+                    document.getElementById("productAnalytics");
+
+                productAnalytics.innerHTML = "";
+
+                const table = document.createElement("table");
+
+                table.className = "analytics-table";
+
+                table.innerHTML = `
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Category</th>
+                    <th>Lowest Price</th>
+                    <th>Highest Price</th>
+                    <th>Average Price</th>
+                    <th>Potential Savings</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+            </tbody>
+        `;
+
+                const tbody = table.querySelector("tbody");
+
+                data.forEach(product => {
+
+                    const row = document.createElement("tr");
+
+                    row.innerHTML = `
+                <td>${product.name}</td>
+
+                <td>${product.category}</td>
+
+                <td>
+                    ₹${Number(product.lowestPrice)
+                            .toLocaleString("en-IN")}
+                </td>
+
+                <td>
+                    ₹${Number(product.highestPrice)
+                            .toLocaleString("en-IN")}
+                </td>
+
+                <td>
+                    ₹${Number(product.averagePrice)
+                            .toLocaleString("en-IN")}
+                </td>
+
+                <td class="savings">
+                    ₹${Number(product.savings)
+                            .toLocaleString("en-IN")}
+                </td>
+                <td>
+                    <button
+                        class="compare-small-button"
+                        onclick="window.location.href='compare.html?id=${product.id}'">
+                        Compare
+                    </button>
+                </td>
+            `;
+
+                    tbody.appendChild(row);
+
+                });
+
+                const tableWrapper = document.createElement("div");
+
+                tableWrapper.className = "table-wrapper";
+
+                tableWrapper.appendChild(table);
+
+                productAnalytics.appendChild(tableWrapper);
+
+            })
+            .catch(error => {
+
+                console.log("Product analytics error:", error);
+
+            });
+
+    </script>
+
+</body>
+
+</html>

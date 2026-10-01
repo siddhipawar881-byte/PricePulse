@@ -1,0 +1,190 @@
+
+/* Sign up Page */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #f8f9fc;
+    color: #111827;
+}
+
+
+/* Main Container */
+
+.signup-container {
+    min-height: 100vh;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    padding: 20px;
+}
+
+
+/* Sign Up Card */
+
+.signup-card {
+    width: 100%;
+    max-width: 420px;
+
+    padding: 40px;
+
+    background: white;
+
+    border: 1px solid #e5e7eb;
+    border-radius: 18px;
+
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08);
+}
+
+
+/* Logo */
+
+.logo {
+    text-align: center;
+
+    font-size: 28px;
+    font-weight: 700;
+
+    color: #111827;
+
+    margin-bottom: 25px;
+}
+
+.logo span {
+    color: #5b4bdb;
+}
+
+
+/* Heading */
+
+.signup-card h1 {
+    text-align: center;
+
+    font-size: 27px;
+
+    margin-bottom: 10px;
+}
+
+.signup-description {
+    text-align: center;
+
+    color: #6b7280;
+
+    font-size: 14px;
+
+    line-height: 1.5;
+
+    margin-bottom: 25px;
+}
+
+
+/* Input Groups */
+
+.input-group {
+    margin-bottom: 17px;
+}
+
+.input-group label {
+    display: block;
+
+    margin-bottom: 8px;
+
+    color: #374151;
+
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.input-group input {
+    width: 100%;
+
+    padding: 13px 14px;
+
+    border: 1px solid #d1d5db;
+    border-radius: 9px;
+
+    outline: none;
+
+    font-size: 14px;
+
+    transition: 0.3s;
+}
+
+.input-group input:focus {
+    border-color: #5b4bdb;
+
+    box-shadow: 0 0 0 3px rgba(91, 75, 219, 0.10);
+}
+
+/* Sign Up Button */
+
+.signup-submit {
+    width: 100%;
+
+    padding: 13px;
+
+    margin-top: 5px;
+
+    border: none;
+    border-radius: 9px;
+
+    background: #5b4bdb;
+    color: white;
+
+    font-size: 15px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: 0.3s;
+}
+
+.signup-submit:hover {
+    background: #4939c5;
+
+    transform: translateY(-1px);
+}
+
+
+/* Login Link */
+
+.login-text {
+    text-align: center;
+
+    margin-top: 22px;
+
+    color: #6b7280;
+
+    font-size: 14px;
+}
+
+.login-text a {
+    color: #5b4bdb;
+
+    font-weight: 600;
+
+    text-decoration: none;
+}
+
+.login-text a:hover {
+    text-decoration: underline;
+}
+
+
+/* Mobile */
+
+@media (max-width: 500px) {
+
+    .signup-card {
+        padding: 30px 22px;
+    }
+
+}
+

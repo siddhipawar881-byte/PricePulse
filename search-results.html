@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Search Results | PricePulse</title>
+    <link rel="stylesheet" href="search-results.css">
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header class="header">
+
+        <nav class="navbar">
+
+            <div class="logo">
+                Price<span>Pulse</span>
+            </div>
+
+            <div class="nav-right">
+
+                <button class="menu-btn" onclick="toggleMenu()">
+                    ☰
+                </button>
+
+                <button class="login-btn" id="authButton" onclick="handleAuth()">
+                    Login
+                </button>
+
+            </div>
+
+        </nav>
+
+
+        <!-- Navigation Menu -->
+        <div class="menu-panel" id="menuPanel">
+
+            <a href="home.html">Home</a>
+
+            <a href="products.html">Products</a>
+
+            <div class="dropdown">
+
+                <button class="dropdown-btn" onclick="toggleCategories()">
+                    Categories ▾
+                </button>
+
+                <div class="category-menu" id="categoryMenu">
+
+                    <a href="#">Mobiles</a>
+                    <a href="#">Laptops</a>
+                    <a href="#">Headphones</a>
+                    <a href="#">Cameras</a>
+                    <a href="#">Smartwatches</a>
+                    <a href="#">Home Appliances</a>
+
+                </div>
+
+            </div>
+
+            <a href="#">Compare</a>
+            <a href="#">Watchlist</a>
+            <a href="#">Analytics</a>
+
+        </div>
+
+    </header>
+
+
+    <!-- Search Results -->
+    <main>
+
+        <section class="search-results-section">
+
+            <div class="search-results-heading">
+
+                <p class="section-tag">
+                    SEARCH RESULTS
+                </p>
+
+                <h1 id="searchTitle">
+                    Search Results
+                </h1>
+
+                <p>
+                    Compare products and prices from different retailers.
+                </p>
+
+            </div>
+
+
+            <!-- Search Bar -->
+            <div class="search-box">
+
+                <input type="text" id="searchInput" placeholder="Search for a product...">
+
+                <button onclick="searchProduct()">
+                    Search
+                </button>
+
+            </div>
+
+
+            <!-- Retailer Filters -->
+            <div class="retailer-filters">
+
+                <button class="filter-btn active" onclick="filterProducts('All', this)">
+                    All
+                </button>
+
+                <button class="filter-btn" onclick="filterProducts('Amazon', this)">
+                    Amazon
+                </button>
+
+                <button class="filter-btn" onclick="filterProducts('Flipkart', this)">
+                    Flipkart
+                </button>
+
+                <button class="filter-btn" onclick="filterProducts('Croma', this)">
+                    Croma
+                </button>
+
+            </div>
+
+
+            <!-- Results -->
+            <div class="search-results-grid" id="searchResults">
+
+                <p>
+                    Loading products...
+                </p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- Footer -->
+    <footer class="footer">
+
+        <div class="footer-container">
+
+            <div class="footer-brand">
+
+                <div class="footer-logo">
+                    Price<span>Pulse</span>
+                </div>
+
+                <p>
+                    Smart price intelligence for smarter buying decisions.
+                </p>
+
+            </div>
+
+
+            <div class="footer-links">
+
+                <h3>Quick Links</h3>
+
+                <a href="home.html">Home</a>
+                <a href="products.html">Products</a>
+                <a href="#">Compare</a>
+                <a href="#">Watchlist</a>
+
+            </div>
+
+
+            <div class="footer-links">
+
+                <h3>Categories</h3>
+
+                <a href="#">Mobiles</a>
+                <a href="#">Laptops</a>
+                <a href="#">Headphones</a>
+                <a href="#">Cameras</a>
+
+            </div>
+
+
+            <div class="footer-links">
+
+                <h3>PricePulse</h3>
+
+                <a href="#">About Us</a>
+                <a href="#">How It Works</a>
+                <a href="#">Contact</a>
+                <a href="#">Privacy Policy</a>
+
+            </div>
+
+        </div>
+
+
+        <div class="footer-bottom">
+
+            <p>
+                © 2026 PricePulse. All rights reserved.
+            </p>
+
+            <p>
+                Built for smarter shopping.
+            </p>
+
+        </div>
+
+    </footer>
+
+
+    <!-- Internal JavaScript -->
+    <script>
+        let currentProducts = [];
+        function toggleMenu() {
+
+            document
+                .getElementById("menuPanel")
+                .classList.toggle("show");
+
+        }
+
+
+        function toggleCategories() {
+
+            document
+                .getElementById("categoryMenu")
+                .classList.toggle("show");
+
+        }
+
+
+        function searchProduct() {
+
+            const searchInput =
+                document.getElementById("searchInput");
+
+            const query =
+                searchInput.value.trim();
+
+            if (query === "") {
+
+                alert("Please enter a product name.");
+
+                return;
+
+            }
+
+            window.location.href =
+                "search-results.html?query=" +
+                encodeURIComponent(query);
+
+        }
+
+
+        // Get search query from URL
+        const urlParams =
+            new URLSearchParams(window.location.search);
+
+        const query =
+            urlParams.get("query");
+
+
+        // Display searched product
+        if (query) {
+            document.getElementById("searchTitle").textContent =
+                `Search results for "${query}"`;
+
+            document.getElementById("searchInput").value =
+                query;
+
+            searchAllProducts(query);
+        }
+
+
+        // Search Amazon products
+        // Search Amazon products
+        async function searchAmazonProducts(query) {
+
+            try {
+
+                const response = await fetch(
+                    `http://localhost:3000/amazon-search?query=${encodeURIComponent(query)}`
+                );
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        data.message || "Amazon search failed."
+                    );
+                }
+
+                if (
+                    !data.data ||
+                    !data.data.results ||
+                    data.data.results.length === 0
+                ) {
+                    return [];
+                }
+
+                return data.data.results;
+
+            } catch (error) {
+
+                console.error("Amazon search error:", error);
+
+                return [];
+            }
+        }
+
+        // Search Flipkart products
+        async function searchFlipkartProducts(query) {
+
+            try {
+                const response = await fetch(
+                    `http://localhost:3000/flipkart-search?query=${encodeURIComponent(query)}`
+                );
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        data.message || "Flipkart search failed."
+                    );
+                }
+
+                if (
+                    !data.data ||
+                    !data.data.results ||
+                    data.data.results.length === 0
+                ) {
+                    return [];
+                }
+
+                return data.data.results;
+
+            } catch (error) {
+                console.error("Flipkart search error:", error);
+
+                return [];
+            }
+        }
+
+        // Search Amazon + Flipkart
+        async function searchAllProducts(query) {
+
+            const resultsContainer =
+                document.getElementById("searchResults");
+
+            resultsContainer.innerHTML =
+                "<p>Searching Amazon and Flipkart...</p>";
+
+            try {
+
+                const [amazonProducts, flipkartProducts] =
+                    await Promise.all([
+                        searchAmazonProducts(query),
+                        searchFlipkartProducts(query)
+                    ]);
+
+                const allProducts = [
+                    ...amazonProducts,
+                    ...flipkartProducts
+                ];
+                currentProducts = allProducts;
+
+                if (allProducts.length === 0) {
+
+                    resultsContainer.innerHTML =
+                        "<p>No products found.</p>";
+
+                    return;
+                }
+
+                displayProducts(allProducts);
+
+            } catch (error) {
+
+                console.error("Search error:", error);
+
+                resultsContainer.innerHTML =
+                    "<p>Could not search products right now.</p>";
+            }
+        }
+
+        // Display products
+        function displayProducts(products) {
+
+            const resultsContainer =
+                document.getElementById("searchResults");
+
+
+            resultsContainer.innerHTML = "";
+
+
+            products.forEach(product => {
+
+                const card =
+                    document.createElement("div");
+
+                card.className = "product-card";
+
+
+                const price =
+                    product.price !== null
+                        ? `₹${Number(product.price).toLocaleString("en-IN")}`
+                        : "Price unavailable";
+
+
+                const rating =
+                    product.rating !== null
+                        ? `⭐ ${product.rating}`
+                        : "Rating unavailable";
+
+
+                card.innerHTML = `
+
+            <img
+                src="${product.image}"
+                alt="${product.name}"
+            >
+
+            <h2>
+                ${product.name}
+            </h2>
+
+            <p>
+                ${rating}
+            </p>
+
+            <div class="product-price">
+                ${price}
+            </div>
+
+            <div class="product-retailer">
+                ${product.source}
+            </div>
+
+            <button
+                onclick="viewProduct('${product.productUrl}')"
+            >
+                View Product
+            </button>
+
+        `;
+
+
+                resultsContainer.appendChild(card);
+
+            });
+
+        }
+
+
+        // Open Amazon product
+        function viewProduct(url) {
+            window.open(url, "_blank");
+        }
+
+
+        // Temporary sample products
+        function showSampleResults(query) {
+
+            const resultsContainer =
+                document.getElementById("searchResults");
+
+            const products = [
+
+                {
+                    name: query,
+                    price: "₹69,999",
+                    retailer: "Amazon",
+                    description: "Latest product available at a competitive price."
+                },
+
+                {
+                    name: query,
+                    price: "₹71,490",
+                    retailer: "Flipkart",
+                    description: "Check another retailer for price comparison."
+                },
+
+                {
+                    name: query,
+                    price: "₹70,999",
+                    retailer: "Croma",
+                    description: "Compare prices before making your purchase."
+                }
+
+            ];
+
+
+            resultsContainer.innerHTML = "";
+
+
+            products.forEach(product => {
+
+                const card = document.createElement("div");
+
+                card.className = "product-card";
+
+                card.innerHTML = `
+
+                    <div class="product-image-placeholder">
+                        Product Image
+                    </div>
+
+                    <h2>${product.name}</h2>
+
+                    <p>${product.description}</p>
+
+                    <div class="product-price">
+                        ${product.price}
+                    </div>
+
+                    <div class="product-retailer">
+                        Retailer: ${product.retailer}
+                    </div>
+
+                    <button>
+                        Compare Prices
+                    </button>
+
+                `;
+
+                resultsContainer.appendChild(card);
+
+            });
+
+        }
+
+        // Filter products by retailer
+        function filterProducts(retailer, button) {
+
+            // Update active button
+            document
+                .querySelectorAll(".filter-btn")
+                .forEach(btn => {
+                    btn.classList.remove("active");
+                });
+
+            button.classList.add("active");
+
+            // Show all products
+            if (retailer === "All") {
+                displayProducts(currentProducts);
+                return;
+            }
+
+            // Show selected retailer
+            const filteredProducts =
+                currentProducts.filter(product =>
+                    product.source === retailer
+                );
+
+            if (filteredProducts.length === 0) {
+
+                document.getElementById("searchResults").innerHTML =
+                    `<p>No ${retailer} products found.</p>`;
+
+                return;
+            }
+
+            displayProducts(filteredProducts);
+        }
+
+    </script>
+
+</body>
+
+</html>

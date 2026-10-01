@@ -1,0 +1,462 @@
+/* general*/
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #F8F9FC;
+    color: #111827;
+}
+
+
+/*navbar */
+
+.navbar {
+    height: 70px;
+    background: #FFFFFF;
+
+    display: flex;
+    align-items: center;
+
+    padding: 0 7%;
+
+    border-bottom: 1px solid #E5E7EB;
+
+    gap: 40px;
+}
+
+.logo {
+    font-size: 24px;
+    font-weight: bold;
+    color: #5B4BDB;
+
+    margin-right: auto;
+}
+
+.nav-links {
+    display: flex;
+    gap: 28px;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: #6B7280;
+    font-size: 15px;
+    font-weight: 500;
+
+    transition: 0.2s;
+}
+
+.nav-links a:hover {
+    color: #5B4BDB;
+}
+
+.nav-links a.active {
+    color: #5B4BDB;
+    font-weight: 600;
+}
+
+.auth-button {
+    border: none;
+    background: #5B4BDB;
+    color: #FFFFFF;
+
+    padding: 10px 20px;
+
+    border-radius: 8px;
+
+    cursor: pointer;
+
+    font-size: 14px;
+}
+
+.auth-button:hover {
+    background: #4A3BC7;
+}
+
+
+/* analytics header */
+
+.analytics-header {
+    text-align: center;
+
+    padding: 55px 20px 35px;
+}
+
+.small-heading {
+    color: #5B4BDB;
+
+    font-size: 12px;
+
+    font-weight: 700;
+
+    letter-spacing: 1.5px;
+
+    margin-bottom: 8px;
+}
+
+.analytics-header h1 {
+    font-size: 36px;
+
+    margin-bottom: 12px;
+}
+
+.analytics-header>p:last-child {
+    color: #6B7280;
+
+    font-size: 16px;
+
+    max-width: 650px;
+
+    margin: auto;
+
+    line-height: 1.6;
+}
+
+
+/* kpi section */
+
+.kpi-section {
+    width: 86%;
+
+    max-width: 1200px;
+
+    margin: 0 auto 30px;
+
+    display: grid;
+
+    grid-template-columns: repeat(4, 1fr);
+
+    gap: 20px;
+}
+
+.kpi-card {
+    background: #FFFFFF;
+
+    border: 1px solid #E5E7EB;
+
+    border-radius: 14px;
+
+    padding: 22px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 15px;
+
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+}
+
+.kpi-icon {
+    width: 48px;
+    height: 48px;
+
+    background: #F1EFFF;
+
+    color: #5B4BDB;
+
+    border-radius: 12px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    font-size: 21px;
+}
+
+.kpi-label {
+    color: #6B7280;
+
+    font-size: 13px;
+
+    margin-bottom: 5px;
+}
+
+.kpi-card h2 {
+    font-size: 24px;
+
+    color: #111827;
+}
+
+
+/* main analytics grid */
+
+.analytics-grid {
+    width: 86%;
+
+    max-width: 1200px;
+
+    margin: 0 auto 30px;
+
+    display: grid;
+
+    grid-template-columns: 1.5fr 1fr;
+
+    gap: 20px;
+}
+
+.analytics-card {
+    background: #FFFFFF;
+
+    border: 1px solid #E5E7EB;
+
+    border-radius: 14px;
+
+    padding: 25px;
+
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+}
+
+.section-title {
+    margin-bottom: 20px;
+}
+
+.section-title h2 {
+    font-size: 20px;
+
+    margin-top: 5px;
+}
+
+
+/* category charts */
+
+.chart-container {
+    height: 350px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 10px;
+
+    background: #FAFAFD;
+}
+
+.chart-placeholder {
+    color: #9CA3AF;
+
+    font-size: 14px;
+}
+
+
+/* Best Deals */
+
+.deals-card {
+    min-height: 420px;
+}
+
+.loading-message {
+    color: #9CA3AF;
+
+    font-size: 14px;
+
+    padding: 20px 0;
+}
+
+.deal-item {
+    padding: 15px 0;
+
+    border-bottom: 1px solid #E5E7EB;
+}
+
+.deal-item:last-child {
+    border-bottom: none;
+}
+
+.deal-name {
+    font-size: 15px;
+
+    font-weight: 600;
+
+    margin-bottom: 5px;
+}
+
+.deal-details {
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    gap: 10px;
+}
+
+.deal-price {
+    font-weight: 600;
+
+    color: #111827;
+}
+
+.deal-seller {
+    color: #6B7280;
+
+    font-size: 13px;
+}
+
+.deal-discount {
+    color: #16A34A;
+
+    font-size: 13px;
+
+    font-weight: 600;
+}
+
+
+/* product analytics */
+
+.product-analytics-card {
+    width: 86%;
+
+    max-width: 1200px;
+
+    margin: 0 auto 50px;
+}
+
+
+/* Responsive Design */
+
+@media (max-width: 900px) {
+
+    .navbar {
+        padding: 0 4%;
+    }
+
+    .nav-links {
+        gap: 15px;
+    }
+
+    .kpi-section {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .analytics-grid {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+
+@media (max-width: 600px) {
+
+    .navbar {
+        padding: 0 20px;
+    }
+
+    .nav-links {
+        display: none;
+    }
+
+    .analytics-header {
+        padding-top: 40px;
+    }
+
+    .analytics-header h1 {
+        font-size: 28px;
+    }
+
+    .kpi-section {
+        width: 92%;
+
+        grid-template-columns: 1fr;
+    }
+
+    .analytics-grid {
+        width: 92%;
+    }
+
+    .product-analytics-card {
+        width: 92%;
+    }
+
+    .analytics-card {
+        padding: 18px;
+    }
+
+    .section-title h2 {
+        font-size: 18px;
+    }
+
+    .analytics-table th,
+    .analytics-table td {
+        padding: 12px 10px;
+    }
+
+}
+
+.analytics-table {
+    width: 100%;
+    min-width: 850px;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.analytics-table th {
+    text-align: left;
+    padding: 14px 12px;
+
+    background: #F8F9FC;
+
+    color: #6B7280;
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+    border-bottom: 1px solid #E5E7EB;
+}
+
+.analytics-table td {
+    padding: 15px 12px;
+
+    font-size: 14px;
+
+    border-bottom: 1px solid #E5E7EB;
+}
+
+.analytics-table tbody tr:hover {
+    background: #FAFAFD;
+}
+
+.analytics-table .savings {
+    color: #16A34A;
+
+    font-weight: 600;
+}
+
+.table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.compare-small-button {
+    border: none;
+
+    background: #5B4BDB;
+
+    color: #FFFFFF;
+
+    padding: 8px 14px;
+
+    border-radius: 7px;
+
+    font-size: 13px;
+
+    cursor: pointer;
+
+    white-space: nowrap;
+
+    transition: 0.2s;
+}
+
+.compare-small-button:hover {
+    background: #4A3BC7;
+}

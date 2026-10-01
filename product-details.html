@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Details | PricePulse</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo">
+            PricePulse
+        </div>
+        <div class="nav-links">
+            <a href="home.html">Home</a>
+            <a href="products.html">Products</a>
+        </div>
+    </nav>
+    <!-- Product Details -->
+    <section class="product-details">
+        <p id="loadingMessage">Loading product...</p>
+        <button class="back-button" onclick="window.location.href='products.html'">
+            ← Back to Products
+        </button>
+        <div class="product-details-image">
+            <img id="productImage" src="" alt="Product Image">
+        </div>
+        <div class="product-details-info">
+            <p id="productCategory" class="product-category"></p>
+            <h1 id="productName"></h1>
+            <p id="productDescription" class="product-description"></p>
+            <p id="productPrice" class="product-price"></p>
+            <p id="productSeller" class="product-seller"></p>
+            <span id="productDiscount" class="discount"></span>
+            <button class="compare-button" onclick="compareProduct()">
+                Compare this product
+            </button>
+
+            <div id="buyWaitBox" class="buy-wait-box">
+
+                <p class="buy-wait-label">PRICE INSIGHT</p>
+
+                <h2 id="buyWaitDecision">Checking price...</h2>
+
+                <p id="buyWaitMessage"></p>
+
+                <div class="buy-wait-prices">
+
+                    <div>
+                        <span>Current Price</span>
+                        <strong id="insightCurrentPrice">-</strong>
+                    </div>
+
+                    <div>
+                        <span>Historical Average</span>
+                        <strong id="insightAveragePrice">-</strong>
+                    </div>
+
+                    <div>
+                        <span>Price Position</span>
+                        <strong id="insightPricePosition">-</strong>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </section>
+    <section class="price-history-section">
+
+        <div class="price-history-header">
+
+            <p class="small-heading">PRICE HISTORY</p>
+
+            <h2>Price Trend</h2>
+
+            <p>
+                See how the product price has changed over time.
+            </p>
+
+        </div>
+
+        <div class="price-history-card">
+
+            <div class="seller-select-container">
+
+                <label for="sellerSelect">
+                    Select Seller
+                </label>
+
+                <select id="sellerSelect">
+                    <option value="">Select a seller</option>
+                </select>
+
+            </div>
+
+            <div class="price-chart-container">
+
+                <canvas id="priceHistoryChart"></canvas>
+
+            </div>
+
+        </div>
+
+    </section>
+    <script>
+
+        // Get the product ID from the URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const productId = urlParams.get("id");
+
+        function compareProduct() {
+
+            window.location.href = "compare.html?id=" + productId;
+
+        }
+
+        // Fetch the selected product
+        fetch("http://127.0.0.1:3000/products/" + productId)
+
+            .then(response => {
+
+                if (!response.ok) {
+                    throw new Error("Product not found");
+                }
+
+                return response.json();
+
+            })
+
+            .then(product => {
+
+                console.log(product);
+
+                // Hide loading message
+                document.getElementById("loadingMessage").style.display = "none";
+
+                // Display product information
+                document.getElementById("productImage").src = product.image_url;
+
+                document.getElementById("productName").textContent = product.name;
+
+                document.getElementById("productCategory").textContent = product.category;
+
+                document.getElementById("productDescription").textContent = product.description;
+
+                document.getElementById("productPrice").textContent =
+                    "₹" + Number(product.price).toLocaleString("en-IN");
+
+                document.getElementById("productSeller").textContent =
+                    "Seller: " + product.seller;
+
+                document.getElementById("productDiscount").textContent =
+                    product.discount + "% OFF";
+
+            })
+
+            .catch(error => {
+
+                console.log("Error:", error);
+
+                document.getElementById("loadingMessage").textContent =
+                    "Product not found.";
+
+            });
+
+        // ================================
+        // PRICE HISTORY
+        // ================================
+
+        let priceHistoryData = [];
+        let priceHistoryChart = null;
+
+        fetch(`http://127.0.0.1:3000/products/${productId}/price-history`)
+            .then(response => response.json())
+            .then(data => {
+
+                priceHistoryData = data;
+
+                const sellerSelect =
+                    document.getElementById("sellerSelect");
+
+                const sellers = [
+                    ...new Set(data.map(item => item.seller))
+                ];
+
+                sellers.forEach(seller => {
+
+                    const option =
+                        document.createElement("option");
+
+                    option.value = seller;
+                    option.textContent = seller;
+
+                    sellerSelect.appendChild(option);
+
+                });
+
+                if (sellers.length > 0) {
+
+                    sellerSelect.value = sellers[0];
+
+                    drawPriceHistory(sellers[0]);
+
+                }
+
+            })
+            .catch(error => {
+
+                console.log("Price history error:", error);
+
+            });
+
+
+        function drawPriceHistory(seller) {
+
+            const sellerData =
+                priceHistoryData.filter(
+                    item => item.seller === seller
+                );
+
+            const labels = sellerData.map(item => {
+
+                return new Date(item.recorded_at)
+                    .toLocaleDateString("en-IN");
+
+            });
+
+            const prices = sellerData.map(
+                item => Number(item.price)
+            );
+
+            const ctx =
+                document.getElementById("priceHistoryChart");
+
+            if (priceHistoryChart) {
+
+                priceHistoryChart.destroy();
+
+            }
+
+            priceHistoryChart = new Chart(ctx, {
+
+                type: "line",
+
+                data: {
+
+                    labels: labels,
+
+                    datasets: [{
+
+                        label: seller + " Price",
+
+                        data: prices,
+
+                        tension: 0.3,
+
+                        fill: false,
+
+                        pointRadius: 5
+
+                    }]
+
+                },
+
+                options: {
+
+                    responsive: true,
+
+                    maintainAspectRatio: false,
+
+                    scales: {
+
+                        y: {
+
+                            beginAtZero: false,
+
+                            ticks: {
+
+                                callback: function (value) {
+
+                                    return "₹" +
+                                        Number(value).toLocaleString("en-IN");
+
+                                }
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            });
+
+        }
+
+
+        document
+            .getElementById("sellerSelect")
+            .addEventListener("change", function () {
+
+                drawPriceHistory(this.value);
+
+            });
+        function loadBuyWaitInsight() {
+
+            fetch(`http://127.0.0.1:3000/products/${productId}/buy-wait`)
+
+                .then(response => {
+
+                    if (!response.ok) {
+                        throw new Error("Could not fetch buy-wait insight.");
+                    }
+
+                    return response.json();
+
+                })
+
+                .then(data => {
+
+                    const decisionElement =
+                        document.getElementById("buyWaitDecision");
+
+                    const box =
+                        document.getElementById("buyWaitBox");
+
+                    if (data.decision === "BUY") {
+
+                        decisionElement.textContent =
+                            "🟢 Good Time to Buy";
+
+                        box.classList.add("buy");
+
+                    } else if (data.decision === "CONSIDER") {
+
+                        decisionElement.textContent =
+                            "🟡 Price is Around Average";
+
+                        box.classList.add("consider");
+
+                    } else {
+
+                        decisionElement.textContent =
+                            "🔴 You May Want to Wait";
+
+                        box.classList.add("wait");
+
+                    }
+
+                    document.getElementById("buyWaitMessage").textContent =
+                        data.message;
+
+                    document.getElementById("insightCurrentPrice").textContent =
+                        "₹" + Number(data.currentPrice)
+                            .toLocaleString("en-IN");
+
+                    document.getElementById("insightAveragePrice").textContent =
+                        "₹" + Number(data.averagePrice)
+                            .toLocaleString("en-IN");
+
+                    document.getElementById("insightPricePosition").textContent =
+                        data.pricePosition + "%";
+
+                })
+
+                .catch(error => {
+
+                    console.log("Buy-Wait Error:", error);
+
+                    document.getElementById("buyWaitDecision").textContent =
+                        "Price insight unavailable.";
+
+                    document.getElementById("buyWaitMessage").textContent =
+                        "We could not calculate the price insight right now.";
+
+                });
+
+        }
+        loadBuyWaitInsight();
+    </script>
+</body>
+
+</html>

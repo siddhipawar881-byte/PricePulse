@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Products | PricePulse</title>
+
+    <link rel="stylesheet" href="products.css">
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header class="header">
+
+        <nav class="navbar">
+
+            <div class="logo">
+                Price<span>Pulse</span>
+            </div>
+
+            <div class="nav-right">
+
+                <button class="menu-btn" onclick="toggleMenu()">
+                    ☰
+                </button>
+
+                <button class="login-btn" id="authButton">
+                    Login
+                </button>
+
+            </div>
+
+        </nav>
+
+        <!-- Navigation Menu -->
+        <div class="menu-panel" id="menuPanel">
+
+            <a href="home.html">Home</a>
+
+            <a href="products.html">Products</a>
+
+            <div class="dropdown">
+
+                <button class="dropdown-btn" onclick="toggleCategories()">
+                    Categories ▾
+                </button>
+
+                <div class="category-menu" id="categoryMenu">
+
+                    <a href="#">Mobiles</a>
+                    <a href="#">Laptops</a>
+                    <a href="#">Headphones</a>
+                    <a href="#">Cameras</a>
+                    <a href="#">Smartwatches</a>
+                    <a href="#">Home Appliances</a>
+
+                </div>
+
+            </div>
+
+            <a href="#">Compare</a>
+            <a href="#">Watchlist</a>
+            <a href="#">Analytics</a>
+
+        </div>
+
+    </header>
+
+
+    <!-- Products Header -->
+    <main>
+
+        <section class="products-hero">
+
+            <div class="products-heading">
+
+                <p class="section-tag">
+                    EXPLORE PRODUCTS
+                </p>
+
+                <h1>
+                    Find the right product
+                </h1>
+
+                <p>
+                    Search, compare, and discover smarter prices
+                    across popular products.
+                </p>
+
+            </div>
+
+
+            <!-- Search -->
+            <div class="product-search">
+
+                <input type="text" id="productSearch" placeholder="Search for a product...">
+
+                <button onclick="searchProducts()">
+                    Search
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- Categories -->
+        <section class="product-categories">
+
+            <button class="category-filter active" data-category="">
+                All
+            </button>
+
+            <button class="category-filter" data-category="Mobiles">
+                Mobiles
+            </button>
+
+            <button class="category-filter" data-category="Laptops">
+                Laptops
+            </button>
+
+            <button class="category-filter" data-category="Headphones">
+                Headphones
+            </button>
+
+            <button class="category-filter" data-category="Cameras">
+                Cameras
+            </button>
+
+            <button class="category-filter" data-category="Smartwatches">
+                Smartwatches
+            </button>
+
+            <button class="category-filter" data-category="Home Appliances">
+                Home Appliances
+            </button>
+
+        </section>
+
+
+        <!-- Products -->
+        <section class="products-section">
+
+            <div class="products-section-header">
+
+                <div>
+                    <p class="section-tag">
+                        PRODUCTS
+                    </p>
+
+                    <h2>
+                        Popular Products
+                    </h2>
+                </div>
+
+                <select id="sortProducts">
+
+                    <option value="default">
+                        Sort by
+                    </option>
+
+                    <option value="low">
+                        Price: Low to High
+                    </option>
+
+                    <option value="high">
+                        Price: High to Low
+                    </option>
+
+                    <option value="discount">
+                        Highest Discount
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="products-grid" id="productGrid">
+
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- Footer -->
+    <footer class="footer">
+
+        <div class="footer-container">
+
+            <div class="footer-brand">
+
+                <div class="footer-logo">
+                    Price<span>Pulse</span>
+                </div>
+
+                <p>
+                    Smart price intelligence for smarter
+                    buying decisions.
+                </p>
+
+            </div>
+
+
+            <div class="footer-links">
+
+                <h3>Quick Links</h3>
+
+                <a href="home.html">Home</a>
+                <a href="products.html">Products</a>
+                <a href="#">Compare</a>
+                <a href="#">Watchlist</a>
+
+            </div>
+
+
+            <div class="footer-links">
+
+                <h3>Categories</h3>
+
+                <a href="#">Mobiles</a>
+                <a href="#">Laptops</a>
+                <a href="#">Headphones</a>
+                <a href="#">Cameras</a>
+
+            </div>
+
+
+            <div class="footer-links">
+
+                <h3>PricePulse</h3>
+
+                <a href="#">About Us</a>
+                <a href="#">How It Works</a>
+                <a href="#">Contact</a>
+                <a href="#">Privacy Policy</a>
+
+            </div>
+
+        </div>
+
+
+        <div class="footer-bottom">
+
+            <p>
+                © 2026 PricePulse. All rights reserved.
+            </p>
+
+            <p>
+                Built for smarter shopping.
+            </p>
+
+        </div>
+
+    </footer>
+
+
+    <!-- Internal JavaScript -->
+    <script>
+        function toggleMenu() {
+            document.getElementById("menuPanel").classList.toggle("show");
+        }
+
+        function toggleCategories() {
+            document.getElementById("categoryMenu").classList.toggle("show");
+        }
+
+
+        // Fetch products from backend
+        function loadProducts(search = "", category = "") {
+
+            let url = "http://127.0.0.1:3000/products";
+
+            let params = [];
+
+            if (search.trim() !== "") {
+                params.push("search=" + encodeURIComponent(search));
+            }
+
+            if (category.trim() !== "") {
+                params.push("category=" + encodeURIComponent(category));
+            }
+
+            if (params.length > 0) {
+                url += "?" + params.join("&");
+            }
+
+            fetch(url)
+                .then(response => response.json())
+                .then(products => {
+
+                    console.log(products);
+
+                    // Get selected sorting option
+                    const sortValue = document.getElementById("sortProducts").value;
+
+                    // Sort products
+                    if (sortValue === "low") {
+
+                        products.sort((a, b) => {
+                            return Number(a.price) - Number(b.price);
+                        });
+
+                    } else if (sortValue === "high") {
+
+                        products.sort((a, b) => {
+                            return Number(b.price) - Number(a.price);
+                        });
+
+                    } else if (sortValue === "discount") {
+
+                        products.sort((a, b) => {
+                            return Number(b.discount) - Number(a.discount);
+                        });
+
+                    }
+
+                    let productGrid = document.getElementById("productGrid");
+
+                    productGrid.innerHTML = "";
+
+                    products.forEach(product => {
+
+                        let card = `
+                        <div class="product-card" onclick="viewProduct(${product.id})">
+
+                        <div class="product-image">
+                            <img src="${product.image_url}" alt="${product.name}">
+                        </div>
+
+                        <div class="product-info">
+
+                            <h3>${product.name}</h3>
+
+                            <p class="product-description">
+                                ${product.description}
+                            </p>
+
+                            <p class="product-price">
+                                ₹${Number(product.price).toLocaleString("en-IN")}
+                            </p>
+
+                            <p class="product-seller">
+                                Seller: ${product.seller}
+                            </p>
+
+                            <span class="discount">
+                                ${product.discount}% OFF
+                            </span>
+
+                        </div>
+
+                    </div>
+                `;
+
+                        productGrid.innerHTML += card;
+                    });
+
+                })
+                .catch(error => {
+                    console.log("Error fetching products:", error);
+                });
+        }
+
+        function searchProducts() {
+
+            let search = document.getElementById("productSearch").value;
+
+            let category = document.querySelector(".category-filter.active").dataset.category;
+
+            loadProducts(search, category);
+        }
+
+        function filterByCategory(category) {
+
+            let search = document.getElementById("productSearch").value;
+
+            loadProducts(search, category);
+        }
+
+        // Multiple buttons dynamicbehavior 
+        const categoryButtons = document.querySelectorAll(".category-filter");
+
+        categoryButtons.forEach(button => {
+
+            button.addEventListener("click", function () {
+
+                const category = this.dataset.category;
+
+                categoryButtons.forEach(btn => {
+                    btn.classList.remove("active");
+                });
+
+                this.classList.add("active");
+
+                filterByCategory(category);
+
+            });
+
+        });
+
+        const sortProducts = document.getElementById("sortProducts");
+
+        sortProducts.addEventListener("change", function () {
+
+            loadProducts(
+                document.getElementById("productSearch").value,
+                document.querySelector(".category-filter.active").dataset.category
+            );
+
+        });
+
+        function viewProduct(productId) {
+
+            window.location.href = "product-details.html?id=" + productId;
+
+        }
+        // Load products when page opens
+        loadProducts();
+    </script>
+
+</body>
+
+</html>
