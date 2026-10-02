@@ -32,7 +32,7 @@ function normalizeFlipkartProduct(product) {
         image: product.image,
         rating: product.rating,
         ratingCount: product.rating_count,
-        inStock: product.in_stock,
+        inStock: true,
         productUrl: product.url
     };
 }

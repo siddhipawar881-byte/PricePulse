@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Compare Prices | PricePulse</title>
+
+    <link rel="stylesheet" href="style.css">
+
+</head>
+
+
+<body>
+
+    <!-- Navbar -->
+
+    <nav class="navbar">
+
+        <div class="logo">
+            PricePulse
+        </div>
+
+        <div class="nav-links">
+
+            <a href="home.html">
+                Home
+            </a>
+
+            <a href="products.html">
+                Products
+            </a>
+
+            <a href="search-results.html">
+                Search Results
+            </a>
+
+        </div>
+
+    </nav>
+
+
+    <!-- Compare Section -->
+
+    <section class="compare-section">
+
+        <h1>
+            Compare Prices
+        </h1>
+
+
+        <div id="selectedProduct" class="compare-product">
+            <p>
+                Loading product...
+            </p>
+        </div>
+        <h2 class="seller-heading">
+            Compare Prices Across Sellers
+        </h2>
+
+        <div id="comparisonResults" class="seller-prices">
+
+            <p>
+                Loading comparison...
+            </p>
+
+        </div>
+
+
+    </section>
+
+
+    <script>
+
+        async function loadComparison() {
+
+            // =====================================================
+            // GET THE PRODUCT SELECTED FROM SEARCH RESULTS
+            // =====================================================
+
+            const storedProduct =
+                sessionStorage.getItem("compareProduct");
+
+
+            if (storedProduct) {
+
+                const product =
+                    JSON.parse(storedProduct);
+
+
+                console.log(
+                    "Selected product:",
+                    product
+                );
+
+
+                // =================================================
+                // DISPLAY SELECTED PRODUCT
+                // =================================================
+
+                document.getElementById(
+                    "selectedProduct"
+                ).innerHTML = `
+
+            <div class="compare-product-image">
+
+                <img
+                    src="${product.image || ""}"
+                    alt="${product.name || "Product"}"
+                >
+
+            </div>
+
+
+            <div class="compare-product-info">
+
+                <p class="product-category">
+                    ${product.source}
+                </p>
+
+
+                <h2>
+                    ${product.name}
+                </h2>
+
+
+                <p class="product-price">
+                    ₹${Number(product.price).toLocaleString("en-IN")}
+                </p>
+
+
+                <p class="product-seller">
+                    Retailer: ${product.source}
+                </p>
+
+            </div>
+
+        `;
+
+
+                // =================================================
+                // SEARCH AMAZON + FLIPKART
+                // =================================================
+
+                const query =
+                    product.name;
+
+
+                const comparisonResults =
+                    document.getElementById("comparisonResults");
+
+
+                comparisonResults.innerHTML = `
+            <p>
+                Searching Amazon and Flipkart...
+            </p>
+        `;
+
+
+                try {
+
+                    const [amazonResponse, flipkartResponse] =
+                        await Promise.all([
+
+                            fetch(
+                                "http://127.0.0.1:3000/amazon-search?query="
+                                + encodeURIComponent(query)
+                            ),
+
+                            fetch(
+                                "http://127.0.0.1:3000/flipkart-search?query="
+                                + encodeURIComponent(query)
+                            )
+
+                        ]);
+
+
+                    // =============================================
+                    // CHECK API RESPONSES
+                    // =============================================
+
+                    if (!amazonResponse.ok) {
+
+                        throw new Error(
+                            "Amazon search failed"
+                        );
+
+                    }
+
+
+                    if (!flipkartResponse.ok) {
+
+                        throw new Error(
+                            "Flipkart search failed"
+                        );
+
+                    }
+
+
+                    const amazonData =
+                        await amazonResponse.json();
+
+
+                    const flipkartData =
+                        await flipkartResponse.json();
+
+
+                    console.log(
+                        "Amazon comparison results:",
+                        amazonData
+                    );
+
+
+                    console.log(
+                        "Flipkart comparison results:",
+                        flipkartData
+                    );
+
+
+                    // =============================================
+                    // GET RESULT ARRAYS
+                    // =============================================
+
+                    const amazonProducts =
+                        amazonData.data &&
+                            Array.isArray(amazonData.data.results)
+                            ? amazonData.data.results
+                            : [];
+
+
+                    const flipkartProducts =
+                        flipkartData.data &&
+                            Array.isArray(flipkartData.data.results)
+                            ? flipkartData.data.results
+                            : [];
+
+
+                    // Combine both retailers
+
+                    const allProducts = [
+
+                        ...amazonProducts,
+
+                        ...flipkartProducts
+
+                    ];
+
+                    allProducts.sort((a, b) => {
+
+                        const priceA = Number(a.price);
+                        const priceB = Number(b.price);
+
+                        if (priceA <= 0) return 1;
+                        if (priceB <= 0) return -1;
+
+                        return priceA - priceB;
+                    });
+
+                    // =============================================
+                    // NO RESULTS
+                    // =============================================
+
+                    if (allProducts.length === 0) {
+
+                        comparisonResults.innerHTML = `
+                    <p>
+                        No comparison products found.
+                    </p>
+                `;
+
+                        return;
+
+                    }
+
+
+                    // =============================================
+                    // DISPLAY RESULTS
+                    // =============================================
+
+                    comparisonResults.innerHTML = "";
+
+
+                    allProducts.forEach((product, index) => {
+                        const card = `
+
+                    <div class="seller-card ${index === 0 ? "best-price" : ""}">
+
+                        <div>
+
+                            <h3>
+                                ${product.source}
+                            </h3>
+
+                            <p>
+                                ${product.name}
+                            </p>
+
+                        </div>
+
+
+                        <div>
+
+                            <p class="seller-price">
+                                ₹${Number(product.price).toLocaleString("en-IN")}
+                            </p>
+
+                            ${index === 0 ? `
+                                <span class="best-price-badge">
+                                    🏆 Best Price
+                                </span>
+                            ` : ""}
+
+                            <a
+                                href="${product.productUrl}"
+                                target="_blank"
+                                class="buy-now-button"
+                            >
+                                View Product →
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                `;
+
+
+                        comparisonResults.innerHTML += card;
+
+                    });
+
+
+                } catch (error) {
+
+                    console.log(
+                        "Comparison error:",
+                        error
+                    );
+
+
+                    comparisonResults.innerHTML = `
+                <p>
+                    Could not load comparison results.
+                </p>
+            `;
+
+                }
+
+
+            } else {
+
+                // =================================================
+                // NO PRODUCT SELECTED
+                // =================================================
+
+                document.getElementById(
+                    "selectedProduct"
+                ).innerHTML = `
+
+            <p>
+                No product selected.
+            </p>
+
+        `;
+
+
+                document.getElementById(
+                    "comparisonResults"
+                ).innerHTML = "";
+
+            }
+        }
+        loadComparison();
+    </script>
+
+</body>
+
+</html>

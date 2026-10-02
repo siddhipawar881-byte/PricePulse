@@ -502,10 +502,35 @@
 
         function compareProduct(productId, source) {
 
-            console.log("Compare product:", productId, source);
+            const product = currentProducts.find(
+                item =>
+                    String(item.sourceProductId) === String(productId) &&
+                    String(item.source) === String(source)
+            );
 
+            if (!product) {
+                console.log("Product not found.");
+                console.log("Clicked productId:", productId, typeof productId);
+                console.log("Clicked source:", source);
+                console.log("Current products:", currentProducts);
+                return;
+            }
+
+            console.log("Selected product for comparison:", product);
+            console.log("Saving product to sessionStorage...");
+
+            sessionStorage.setItem(
+                "compareProduct",
+                JSON.stringify(product)
+            );
+
+            console.log(
+                "Saved product:",
+                sessionStorage.getItem("compareProduct")
+            );
+
+            window.location.href = "search-compare.html";
         }
-
         // Temporary sample products
         function showSampleResults(query) {
 
